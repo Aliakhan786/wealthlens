@@ -1,0 +1,47 @@
+# Full production-like stack on your laptop:  docker compose up --build
+# Then open http://localhost:3000  (API docs: http://localhost:8000/docs)
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: wealthlens
+      POSTGRES_PASSWORD: wealthlens
+      POSTGRES_DB: wealthlens
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./docs/sql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wealthlens"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+  api:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://wealthlens:wealthlens@db:5432/wealthlens
+      REDIS_URL: redis://redis:6379/0
+      CORS_ORIGINS: http://localhost:3000
+      WEB_CONCURRENCY: "1"   # scheduler runs in-process; use 1 worker (or run the scheduler service below)
+    ports: ["8000:8000"]
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_started }
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports: ["3000:3000"]
+    depends_on: [api]
+
+volumes:
+  pgdata:

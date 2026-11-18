@@ -1,0 +1,9 @@
+.venv
+data
+frontend
+powerbi
+docs
+tests
+.git
+**/__pycache__
+.env

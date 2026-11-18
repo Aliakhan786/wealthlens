@@ -1,0 +1,26 @@
+{
+  "name": "WealthLens Dark",
+  "dataColors": ["#34D399", "#F5C048", "#8B5CF6", "#38BDF8", "#F87171", "#FB923C", "#A3E635", "#E879F9"],
+  "background": "#070A12",
+  "foreground": "#ECF1F8",
+  "tableAccent": "#34D399",
+  "good": "#34D399",
+  "neutral": "#F5C048",
+  "bad": "#F87171",
+  "maximum": "#34D399",
+  "center": "#F5C048",
+  "minimum": "#F87171",
+  "textClasses": {
+    "title": { "fontFace": "Segoe UI Semibold", "fontSize": 14, "color": "#ECF1F8" },
+    "label": { "fontFace": "Segoe UI", "fontSize": 10, "color": "#8C98AF" },
+    "callout": { "fontFace": "Segoe UI Bold", "fontSize": 28, "color": "#ECF1F8" }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [{ "color": { "solid": { "color": "#0E131F" } }, "transparency": 0 }],
+        "border": [{ "show": true, "color": { "solid": { "color": "#212A3E" } }, "radius": 12 }]
+      }
+    }
+  }
+}

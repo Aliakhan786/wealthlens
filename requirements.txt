@@ -1,0 +1,16 @@
+fastapi>=0.115,<1
+uvicorn[standard]>=0.30
+pydantic>=2.7
+pydantic-settings>=2.3
+sqlalchemy>=2.0.30,<2.1  # 2.0 falls back to pure Python if Windows Smart App Control blocks its C extension
+psycopg[binary]>=3.2
+pandas>=2.2
+numpy>=1.26
+yfinance>=0.2.54
+requests>=2.32
+feedparser>=6.0
+apscheduler>=3.10,<4
+redis>=5.0
+slowapi>=0.1.9
+anthropic>=0.80
+sentry-sdk[fastapi]>=2.0

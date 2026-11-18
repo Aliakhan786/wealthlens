@@ -1,0 +1,33 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Data (regenerate with: python -m pipeline seed)
+data/
+powerbi/data/
+
+# Secrets
+.env
+.env.*
+!.env.example
+frontend/.env.local
+
+# Node
+frontend/node_modules/
+frontend/.next/
+frontend/test-results/
+frontend/playwright-report/
+frontend/next-env.d.ts
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local tool settings
+.claude/
+frontend/tsconfig.tsbuildinfo

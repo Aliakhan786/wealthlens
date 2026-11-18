@@ -1,0 +1,78 @@
+// ============================================================================
+// WealthLens — DAX measures. Paste each into a "_Measures" table in Power BI.
+// Model: dim_date[date] 1→* fact_prices[date];  dim_asset[asset_id] 1→* fact_prices[asset_id]
+// Mark dim_date as a Date table.
+// ============================================================================
+
+Last Close =
+VAR d = MAX ( fact_prices[date] )
+RETURN CALCULATE ( MAX ( fact_prices[close] ), fact_prices[date] = d )
+
+First Close =
+VAR d = MIN ( fact_prices[date] )
+RETURN CALCULATE ( MAX ( fact_prices[close] ), fact_prices[date] = d )
+
+Period Return = DIVIDE ( [Last Close], [First Close] ) - 1
+
+Years In Period =
+DIVIDE ( DATEDIFF ( MIN ( fact_prices[date] ), MAX ( fact_prices[date] ), DAY ), 365.25 )
+
+CAGR = IF ( [Years In Period] >= 1, POWER ( DIVIDE ( [Last Close], [First Close] ), 1 / [Years In Period] ) - 1 )
+
+// ---- Time intelligence -------------------------------------------------------
+Return YTD =
+VAR lastD = MAX ( dim_date[date] )
+VAR startClose = CALCULATE ( [Last Close], DATESBETWEEN ( dim_date[date], BLANK (), DATE ( YEAR ( lastD ) - 1, 12, 31 ) ) )
+RETURN DIVIDE ( [Last Close], startClose ) - 1
+
+Return 1Y =
+VAR lastD = MAX ( dim_date[date] )
+VAR prior = CALCULATE ( [Last Close], DATESBETWEEN ( dim_date[date], BLANK (), EDATE ( lastD, -12 ) ) )
+RETURN DIVIDE ( [Last Close], prior ) - 1
+
+Return 5Y CAGR =
+VAR lastD = MAX ( dim_date[date] )
+VAR prior = CALCULATE ( [Last Close], DATESBETWEEN ( dim_date[date], BLANK (), EDATE ( lastD, -60 ) ) )
+RETURN IF ( NOT ISBLANK ( prior ), POWER ( DIVIDE ( [Last Close], prior ), 1 / 5 ) - 1 )
+
+// ---- Risk --------------------------------------------------------------------
+Volatility (ann.) = STDEV.S ( fact_prices[daily_return] ) * SQRT ( 252 )
+
+Risk Label =
+SWITCH ( TRUE (), [Volatility (ann.)] < 0.10, "Low", [Volatility (ann.)] < 0.21, "Medium", "High" )
+
+Max Drawdown = MIN ( fact_prices[drawdown] )
+
+Current Drawdown =
+VAR d = MAX ( fact_prices[date] )
+RETURN CALCULATE ( MIN ( fact_prices[drawdown] ), fact_prices[date] = d )
+
+Best Day = MAX ( fact_prices[daily_return] )
+Worst Day = MIN ( fact_prices[daily_return] )
+% Up Days = DIVIDE ( COUNTROWS ( FILTER ( fact_prices, fact_prices[daily_return] > 0 ) ), COUNT ( fact_prices[daily_return] ) )
+
+// ---- Benchmarks --------------------------------------------------------------
+Avg Inflation =
+VAR y1 = YEAR ( MIN ( fact_prices[date] ) )
+VAR y2 = YEAR ( MAX ( fact_prices[date] ) )
+RETURN PRODUCTX ( FILTER ( ALL ( dim_macro ), dim_macro[year] >= y1 && dim_macro[year] <= y2 ), 1 + dim_macro[cpi_inflation] / 100 ) ^ ( 1 / ( y2 - y1 + 1 ) ) - 1
+
+Real CAGR = DIVIDE ( 1 + [CAGR], 1 + [Avg Inflation] ) - 1
+
+// ---- What-if (create parameters: Modeling → New parameter) --------------------
+// 'Monthly SIP'[Monthly SIP Value]  (500 … 100000, step 500)
+// 'Invest Years'[Invest Years Value] (1 … 20)
+SIP Future Value (at CAGR) =
+VAR r = [CAGR] / 12
+VAR n = 'Invest Years'[Invest Years Value] * 12
+VAR p = 'Monthly SIP'[Monthly SIP Value]
+RETURN IF ( r = 0, p * n, p * ( ( POWER ( 1 + r, n ) - 1 ) / r ) * ( 1 + r ) )
+
+SIP Invested = 'Monthly SIP'[Monthly SIP Value] * 'Invest Years'[Invest Years Value] * 12
+
+Lumpsum Future Value (at CAGR) =
+'Monthly SIP'[Monthly SIP Value] * 12 * POWER ( 1 + [CAGR], 'Invest Years'[Invest Years Value] )
+
+// ---- Formatting helpers --------------------------------------------------------
+Return Color = IF ( [Period Return] >= 0, "#16A34A", "#DC2626" )
+Dynamic Title = SELECTEDVALUE ( dim_asset[name], "All assets" ) & " — " & FORMAT ( [Period Return], "+0.0%;-0.0%" )
