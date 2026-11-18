@@ -6,8 +6,9 @@ __pycache__/
 .ruff_cache/
 
 # Data (regenerate with: python -m pipeline seed)
-data/
-powerbi/data/
+# (leading slash = only the top-level folder, so pipeline/data/macro_india.csv is still committed)
+/data/
+/powerbi/data/
 
 # Secrets
 .env
